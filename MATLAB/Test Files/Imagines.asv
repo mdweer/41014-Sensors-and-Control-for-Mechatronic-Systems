@@ -1,0 +1,19 @@
+% img = imread("calib0+1i.jpg");
+% imshow(img)
+% [imagePoints,boardSize] = detectCheckerboardPoints(img);
+% 
+% J = insertText(img,imagePoints,1:size(imagePoints,1));
+% J = insertMarker(J,imagePoints,'o','Color','red','Size',5);
+% imshow(J);
+% title(sprintf('Detected a %d x %d Checkerboard',boardSize));
+
+images = imageSet(fullfile(toolboxdir('vision'),'visiondata',...
+            'calibration','mono'));
+imageFileNames = images.ImageLocation;
+
+squareSize = 33;
+worldPoints = generateCheckerboardPoints(boardSize,squareSize);
+
+I = readimage(images,1); 
+imageSize = [size(I, 1),size(I, 2)];
+params = estimateCameraParameters(imagePoints,worldPoints,'ImageSize',imageSize);
