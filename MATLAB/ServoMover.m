@@ -9,12 +9,10 @@ currentEndEffectorPosition = [currentEndEffectorPoseMsg.Pose.Position.X,
 currentEndEffectorQuat = [currentEndEffectorPoseMsg.Pose.Orientation.W,currentEndEffectorPoseMsg.Pose.Orientation.X,currentEndEffectorPoseMsg.Pose.Orientation.Y,currentEndEffectorPoseMsg.Pose.Orientation.Z]
 % Convert from quaternion to euler
 %[roll,pitch,yaw] = quat2eul(currentEndEffectorQuat)
-eulZYX = quat2eul(currentEndEffectorQuat);
+eulZYX = quat2eul(currentEndEffectorQuat)
 
-%yaw = rad2deg(eulZYX(1))
-% 
-jointStateSubscriber = rossubscriber('/dobot_magician/joint_states'); % Create a ROS Subscriber to the topic joint_states
-pause(2); % Allow some time for a message to appear
-currentJointState = jointStateSubscriber.LatestMessage.Position % Get the latest message
+Vc
 
-currentJointDeg = rad2deg(currentJointState)
+newPose = [(currentEndEffectorPosition(1)-(Vc(1,1)*0.01)),(currentEndEffectorPosition(2)-(Vc(2,1)*0.01)),(currentEndEffectorPosition(3)-(Vc(3,1)*0.01))]
+newRoteul = [(eulZYX(1,1)-Vc(4,1)),0,0]
+newRotquat = eul2quat(newRoteul)

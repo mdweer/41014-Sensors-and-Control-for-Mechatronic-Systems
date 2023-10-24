@@ -11,10 +11,10 @@ currentEndEffectorQuat = [currentEndEffectorPoseMsg.Pose.Orientation.W,currentEn
 %[roll,pitch,yaw] = quat2eul(currentEndEffectorQuat)
 eulZYX = quat2eul(currentEndEffectorQuat);
 
-%yaw = rad2deg(eulZYX(1))
+yaw = rad2deg(eulZYX(1))
 % 
-jointStateSubscriber = rossubscriber('/dobot_magician/joint_states'); % Create a ROS Subscriber to the topic joint_states
-pause(2); % Allow some time for a message to appear
-currentJointState = jointStateSubscriber.LatestMessage.Position % Get the latest message
-
-currentJointDeg = rad2deg(currentJointState)
+% jointStateSubscriber = rossubscriber('/dobot_magician/joint_states'); % Create a ROS Subscriber to the topic joint_states
+% pause(2); % Allow some time for a message to appear
+% currentJointState = jointStateSubscriber.LatestMessage.Position % Get the latest message
+% 
+% currentJointDeg = rad2deg(currentJointState)

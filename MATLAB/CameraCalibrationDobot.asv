@@ -73,7 +73,6 @@ figure;
 showExtrinsics(params);
 
 %%
-input("enter to start loop");
 while 1
 
 img = rossubscriber("/camera/color/image_raw");
@@ -108,6 +107,10 @@ l = 0.1; %lambda
 % Populate target vector using image size (define your own target size for
 % the square)
 
+% imagePointsVS(1,2)
+% imagePointsVS(4,2)
+% imagePointsVS(17,2)
+% imagePointsVS(20,2)
 
 %% 
 Target = [400,285;
@@ -148,39 +151,47 @@ Lx2 = inv(Lx'*Lx)*Lx';
 Vc = -l*Lx2*e
 pause(0.1);
 %%
+% endEffectorPoseSubscriber = rossubscriber('/dobot_magician/end_effector_poses'); % Create a ROS Subscriber to the topic end_effector_poses
+% pause(2); %Allow some time for MATLAB to start the subscriber
+% currentEndEffectorPoseMsg = endEffectorPoseSubscriber.LatestMessage;
+% % Extract the position of the end effector from the received message
+% currentEndEffectorPosition = [currentEndEffectorPoseMsg.Pose.Position.X,
+%                               currentEndEffectorPoseMsg.Pose.Position.Y,
+%                               currentEndEffectorPoseMsg.Pose.Position.Z]
+% % Extract the orientation of the end effector
+% currentEndEffectorQuat = [currentEndEffectorPoseMsg.Pose.Orientation.W,currentEndEffectorPoseMsg.Pose.Orientation.X,currentEndEffectorPoseMsg.Pose.Orientation.Y,currentEndEffectorPoseMsg.Pose.Orientation.Z]
+% % Convert from quaternion to euler
+% %[roll,pitch,yaw] = quat2eul(currentEndEffectorQuat)
+% eulZYX = quat2eul(currentEndEffectorQuat)
 
 jointStateSubscriber = rossubscriber('/dobot_magician/joint_states'); % Create a ROS Subscriber to the topic joint_states
 pause(0.5); % Allow some time for a message to appear
 currentJointState = jointStateSubscriber.LatestMessage.Position % Get the latest message
 
+% 
+% newPose = [(currentEndEffectorPosition(1)-(Vc(1,1)*0.001)),(currentEndEffectorPosition(2)-(Vc(2,1)*0.001)),(currentEndEffectorPosition(3)-(Vc(3,1)*0.001))]
+% newRoteul = [(eulZYX(1,1)+Vc(1,1)*0.01),0,0]
+% newRotquat = eul2quat(newRoteul)
 
 %%
 
 newPitch = currentJointState(3)-Vc(2)*0.1;
-newPitch2 = currentJointState(2)+Vc(3)*0.1;
 
 if newPitch < -0.16
-    tempPitch = -0.16;
+    tempPitch = 0.16;
 elseif newPitch > 1.33
     tempPitch = 1.30;
 else
     tempPitch = newPitch;
 end
 
-if newPitch2 < -0.03
-    tempPitch2 = -0.03;
-elseif newPitch2 > 1.25
-    tempPitch2 = 1.25;
-else
-    tempPitch2 = newPitch2;
-end
-
-jointTarget = [currentJointState(1)-Vc(1)*0.1,tempPitch2,tempPitch,currentJointState(4)] % Remember that the Dobot has 4 joints by default.
+jointTarget = [currentJointState(1)-Vc(1)*0.1,currentJointState(2),tempPitch,currentJointState(4)] % Remember that the Dobot has 4 joints by default.
 
 [targetJointTrajPub,targetJointTrajMsg] = rospublisher('/dobot_magician/target_joint_states');
 trajectoryPoint = rosmessage("trajectory_msgs/JointTrajectoryPoint");
 trajectoryPoint.Positions = jointTarget;
 targetJointTrajMsg.Points = trajectoryPoint;
+
 
 
 %x = input("value check")
