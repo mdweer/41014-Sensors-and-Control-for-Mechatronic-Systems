@@ -1,3 +1,8 @@
+%configuration parameters
+
+%set square size
+squareSize = 33;
+
 %set number of images to calculate
 imgNo = 10;
 
@@ -8,6 +13,13 @@ imgNo = 10;
 %rotations X Y Z W
 poses = [0.2635,0.1286, 0.0960; 0.1334, 0.0140, -0.0119; 0.2242, -0.0950, 0.0266; 0.2738,0.0218, 0.0880; 0.2492,0.0846,0.0313; 0.1930,0.0681, -0.0061;0.2635, 0.1286,0.0960;0.3020, 0.0418, -0.0034;0.1400,-0.1044, 0.0107;0.1988,-0.1083, 0.0774;0.2341, -0.0598,0.0171];
 rotations = [0.9684, 0, 0, 0.2494;0.9970, 0, 0, 0.0771;-0.9847, 0, 0, 0.1744; 0.9992, 0,0,0.0397; 0.9867,0,0,0.1628; 0.9857, 0, 0, 0.1687; 1.0000,0,0,0.0085; -0.9888,0,0,0.1492;-0.8582, 0, 0, 0.5132; -0.8925,0, 0, 0.4511;-0.9416, 0,0,0.3368];
+%%
+%Ros initilization
+
+jointStateSubscriber = rossubscriber('/dobot_magician/joint_states'); % Create a ROS Subscriber to the topic joint_states
+img = rossubscriber("/camera/color/image_raw");
+imageTopic = rossubscriber("/camera/color/image_raw");
+pause(2);
 %%
 %for each position send move robot to position and save an image
 for i = 1:imgNo 
@@ -35,10 +47,10 @@ send(targetEndEffectorPub,targetEndEffectorMsg);
 pause(5)
 
 %subscribe to image, convert to matlab format
-imageTopic = rossubscriber("/camera/color/image_raw");
-pause(1);
+
+
 rgbimg = imageTopic.LatestMessage;
-pause(1);
+pause(0.1);
 imgread = readImage(rgbimg);
 
 %strcat('Saving image Number: ', num2str(i))
@@ -56,8 +68,7 @@ imageFileNames = images.Files;
 %detect checkerboard points
 [imagePoints, boardSize] = detectCheckerboardPoints(imageFileNames);
 
-%set square size
-squareSize = 33;
+
 %determine world points from pixels
 worldPoints = generateCheckerboardPoints(boardSize,squareSize);
 
@@ -74,28 +85,17 @@ showExtrinsics(params);
 
 %%
 input("enter to start loop");
+
 while 1
 
-img = rossubscriber("/camera/color/image_raw");
-pause(1);
 rgbimg = img.LatestMessage;
-pause(0.5);
+pause(0.1);
 imgread = readImage(rgbimg);
-%img = imread('frame0000.jpg');
-%imgGray = rgb2gray(img);
 
+%detect current checkerboard location for visual servoing
 
 [imagePointsVS,boardSizeVS] = detectCheckerboardPoints(imgread);
 
-% J = insertText(img,imagePointsVS,1:size(imagePointsVS,1));
-% J = insertMarker(J,imagePointsVS,'o','Color','red','Size',5);
-% imshow(J);
-% title(sprintf('Detected a %d x %d Checkerboard',boardSizeVS));
-
-% Calculate corner points using Harris Feature detector
-%cp = detectHarrisFeatures(imgGray);
-
-%cp.Location;
 
 %% Control
 
@@ -115,7 +115,7 @@ Target = [400,285;
           210,300;
           200,155];
             
-   
+%set the current corner locations to last detected corner locations, if points corrected incorrectly error = 0   
 if size(imagePointsVS) ~= 20,2
 Obs = Target;
 else
@@ -149,8 +149,6 @@ Vc = -l*Lx2*e
 pause(0.1);
 %%
 
-jointStateSubscriber = rossubscriber('/dobot_magician/joint_states'); % Create a ROS Subscriber to the topic joint_states
-pause(0.5); % Allow some time for a message to appear
 currentJointState = jointStateSubscriber.LatestMessage.Position % Get the latest message
 
 
@@ -172,7 +170,7 @@ if newPitch2 < -0.03
 elseif newPitch2 > 1.25
     tempPitch2 = 1.25;
 else
-    tempPitch2 = newPitch2;
+    tempPitch2 = newPitch2
 end
 
 jointTarget = [currentJointState(1)-Vc(1)*0.1,tempPitch2,tempPitch,currentJointState(4)] % Remember that the Dobot has 4 joints by default.
@@ -182,14 +180,8 @@ trajectoryPoint = rosmessage("trajectory_msgs/JointTrajectoryPoint");
 trajectoryPoint.Positions = jointTarget;
 targetJointTrajMsg.Points = trajectoryPoint;
 
-
-%x = input("value check")
-
 %send end effector position
 %send(targetEndEffectorPub,targetEndEffectorMsg);
 send(targetJointTrajPub,targetJointTrajMsg);
-
-
-x = 0;
 
 end
